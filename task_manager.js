@@ -42,7 +42,12 @@ class TaskManager {
             dateAdded: new Date().toISOString(),
             lastUpdated: new Date().toISOString(),
             originalLine: null,
-            checksum: this.generateTaskChecksum(title)
+            checksum: this.generateTaskChecksum(title),
+            section: '',
+            phase: '',
+            taskNumber: '',
+            phaseData: null,
+            taskData: null
         };
     }
 
@@ -106,7 +111,9 @@ class TaskManager {
                     originalLine: index + 1,
                     section: currentSection,
                     phase: currentPhase,
-                    taskNumber: currentTask
+                    taskNumber: currentTask,
+                    phaseData: this.extractPhaseFromSection(currentPhase),
+                    taskData: this.extractTaskNumberFromSection(currentTask)
                 });
                 taskCounter++;
             }
@@ -149,6 +156,15 @@ class TaskManager {
             taskData.source,
             taskData.notes
         );
+
+        // Copy additional fields from parsed data if they exist
+        if (taskData.section) task.section = taskData.section;
+        if (taskData.phase) task.phase = taskData.phase;
+        if (taskData.taskNumber) task.taskNumber = taskData.taskNumber;
+        if (taskData.phaseData) task.phaseData = taskData.phaseData;
+        if (taskData.taskData) task.taskData = taskData.taskData;
+        if (taskData.originalLine) task.originalLine = taskData.originalLine;
+
         this.tasks.push(task);
         this.saveToLocalStorage();
         return task;
@@ -176,6 +192,14 @@ class TaskManager {
             return true;
         }
         return false;
+    }
+
+    clearAllTasks() {
+        this.tasks = [];
+        this.saveToLocalStorage();
+        this.renderTasks();
+        this.updateStats();
+        this.showNotification('All tasks cleared successfully!', 'success');
     }
 
     // Duplicate detection and merging
@@ -238,6 +262,11 @@ class TaskManager {
         });
     }
 
+    saveMasterFile() {
+        this.saveToLocalStorage();
+        this.showNotification('Master file saved successfully!', 'success');
+    }
+
     exportMasterFile() {
         const masterData = this.getMasterFileStructure();
         const blob = new Blob([JSON.stringify(masterData, null, 2)], { type: 'application/json' });
@@ -272,7 +301,8 @@ class TaskManager {
         markdownContent += `Total Tasks: ${filteredTasks.length}\n\n`;
 
         // Generate markdown based on grouping
-        if (Object.keys(groupedTasks).length > 1 || groupedTasks['ungrouped']) {
+        const hasStructuredData = Object.keys(groupedTasks).some(key => key !== 'ungrouped') || Object.keys(groupedTasks).length > 1;
+        if (hasStructuredData) {
             // Tasks have phase/task structure
             Object.keys(groupedTasks).forEach(phaseKey => {
                 if (phaseKey === 'ungrouped') {
@@ -341,9 +371,17 @@ class TaskManager {
         const grouped = {};
 
         tasks.forEach(task => {
-            // Extract phase and task from the task's section if available
-            const phase = task.phase || this.extractPhaseFromSection(task.section) || 'ungrouped';
-            const taskNum = task.taskNumber || this.extractTaskNumberFromSection(task.section) || 'ungrouped';
+            // Use the stored phase and task data, or fallback to parsing the section
+            let phase = task.phase || 'ungrouped';
+            let taskNum = task.taskNumber || 'ungrouped';
+
+            // If we don't have direct phase/taskNumber, try to extract from section
+            if (phase === 'ungrouped' && task.section) {
+                phase = this.extractPhaseFromSection(task.section) || 'ungrouped';
+            }
+            if (taskNum === 'ungrouped' && task.section) {
+                taskNum = this.extractTaskNumberFromSection(task.section) || 'ungrouped';
+            }
 
             if (!grouped[phase]) {
                 grouped[phase] = {};
@@ -587,6 +625,9 @@ class TaskManager {
             document.getElementById('taskTitle').value = task.title;
             document.getElementById('taskStatus').value = task.status;
             document.getElementById('taskCategory').value = task.category;
+            document.getElementById('taskSection').value = task.section || '';
+            document.getElementById('taskPhase').value = task.phase || '';
+            document.getElementById('taskNumber').value = task.taskNumber || '';
             document.getElementById('taskNotes').value = task.notes || '';
             document.getElementById('modalTitle').textContent = 'Edit Task';
             document.getElementById('taskModal').style.display = 'block';
@@ -655,6 +696,9 @@ class TaskManager {
         const title = document.getElementById('taskTitle').value;
         const status = document.getElementById('taskStatus').value;
         const category = document.getElementById('taskCategory').value;
+        const section = document.getElementById('taskSection').value;
+        const phase = document.getElementById('taskPhase').value;
+        const taskNumber = document.getElementById('taskNumber').value;
         const notes = document.getElementById('taskNotes').value;
 
         if (this.editingTaskId) {
@@ -663,6 +707,9 @@ class TaskManager {
                 title: title,
                 status: status,
                 category: category,
+                section: section,
+                phase: phase,
+                taskNumber: taskNumber,
                 notes: notes
             });
         } else {
@@ -671,6 +718,9 @@ class TaskManager {
                 title: title,
                 status: status,
                 category: category,
+                section: section,
+                phase: phase,
+                taskNumber: taskNumber,
                 source: 'manual',
                 notes: notes
             });
@@ -772,6 +822,10 @@ function sortTable(column) {
     taskManager.sortTable(column);
 }
 
+function saveMasterFile() {
+    taskManager.saveMasterFile();
+}
+
 function exportTasks() {
     taskManager.exportMasterFile();
 }
@@ -794,6 +848,12 @@ function closeHelpModal() {
 
 function exportFilteredView() {
     taskManager.exportFilteredViewAsMarkdown();
+}
+
+function clearAllTasks() {
+    if (confirm('Are you sure you want to clear all tasks? This action cannot be undone.')) {
+        taskManager.clearAllTasks();
+    }
 }
 
 // Initialize when DOM is loaded

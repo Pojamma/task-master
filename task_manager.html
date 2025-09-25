@@ -327,12 +327,13 @@
         .table-container {
             background: white;
             border-radius: 12px;
-            overflow: hidden;
+            overflow-x: auto;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
         }
 
         .table {
             width: 100%;
+            min-width: 800px;
             border-collapse: collapse;
         }
 
@@ -392,7 +393,10 @@
             border-radius: 15px;
             width: 90%;
             max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            position: relative;
         }
 
         .modal-header {
@@ -495,6 +499,12 @@
 
             .stat {
                 min-width: auto;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 2% auto;
+                max-height: 90vh;
             }
         }
 
@@ -599,6 +609,18 @@
         </div>
 
         <div class="controls">
+            <button class="btn btn-secondary" onclick="importMasterFile()">
+                📥 Import Master File
+            </button>
+
+            <button class="btn btn-success" onclick="saveMasterFile()">
+                💾 Save
+            </button>
+
+            <button class="btn btn-success" onclick="exportTasks()">
+                📤 Export Master File
+            </button>
+
             <div class="file-input-wrapper">
                 <input type="file" id="mdFileInput" accept=".md" multiple>
                 <button class="btn btn-primary" onclick="document.getElementById('mdFileInput').click()">
@@ -606,20 +628,16 @@
                 </button>
             </div>
 
-            <button class="btn btn-success" onclick="exportTasks()">
-                💾 Export Master File
-            </button>
-
-            <button class="btn btn-secondary" onclick="importMasterFile()">
-                📥 Import Master File
-            </button>
-
             <button class="btn btn-secondary" onclick="showHelpModal()">
                 ❓ Help
             </button>
 
             <button class="btn btn-success" onclick="exportFilteredView()">
                 📝 Export Filtered View
+            </button>
+
+            <button class="btn btn-secondary" onclick="clearAllTasks()" style="background: #dc3545;">
+                🗑️ Clear Tasks
             </button>
 
             <div class="search-box">
@@ -723,6 +741,18 @@
                         <option value="testing">Testing</option>
                         <option value="documentation">Documentation</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label for="taskSection">Section:</label>
+                    <input type="text" id="taskSection" placeholder="e.g., Phase 1: Foundation">
+                </div>
+                <div class="form-group">
+                    <label for="taskPhase">Phase:</label>
+                    <input type="text" id="taskPhase" placeholder="e.g., Phase 1: Foundation">
+                </div>
+                <div class="form-group">
+                    <label for="taskNumber">Task Number:</label>
+                    <input type="text" id="taskNumber" placeholder="e.g., Task 1.1: Project Setup">
                 </div>
                 <div class="form-group">
                     <label for="taskNotes">Notes:</label>
