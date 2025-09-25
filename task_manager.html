@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Master - Advanced Task Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            align-items: center;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .view-toggle button {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .view-toggle button.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat {
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .main-content {
+            padding: 20px;
+            min-height: 500px;
+        }
+
+        /* Card View Styles */
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .task-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            border-left: 4px solid #007bff;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .task-card.completed {
+            border-left-color: #28a745;
+            opacity: 0.8;
+        }
+
+        .task-card.bug {
+            border-left-color: #dc3545;
+        }
+
+        .task-card.testing {
+            border-left-color: #ffc107;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .task-title {
+            font-weight: 600;
+            font-size: 1.1em;
+            line-height: 1.4;
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .task-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-in-progress {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .task-category {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .category-badge {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .badge-bug { background: #dc3545; }
+        .badge-feature { background: #007bff; }
+        .badge-testing { background: #ffc107; }
+        .badge-documentation { background: #6f42c1; }
+
+        .task-notes {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            border: 1px solid #e9ecef;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8em;
+            border-radius: 6px;
+        }
+
+        /* Table View Styles */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        .table th:hover {
+            background: #e9ecef;
+        }
+
+        .table th.sorted::after {
+            content: ' ↑';
+            position: absolute;
+            right: 8px;
+        }
+
+        .table th.sorted.desc::after {
+            content: ' ↓';
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .table .status-cell {
+            text-align: center;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: auto;
+            }
+
+            .cards-container {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .stat {
+                min-width: auto;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.info {
+            background: #17a2b8;
+        }
+
+        /* Help Modal Styles */
+        .modal-body {
+            line-height: 1.6;
+        }
+
+        .modal-body h4 {
+            color: #007bff;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .modal-body h4:first-child {
+            margin-top: 0;
+        }
+
+        .modal-body ul {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+
+        .modal-body li {
+            margin-bottom: 5px;
+        }
+
+        .modal-body code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            border: 1px solid #e9ecef;
+        }
+
+        .modal-body pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Task Master</h1>
+            <p>Advanced Task Management System</p>
+        </div>
+
+        <div class="controls">
+            <div class="file-input-wrapper">
+                <input type="file" id="mdFileInput" accept=".md" multiple>
+                <button class="btn btn-primary" onclick="document.getElementById('mdFileInput').click()">
+                    📁 Load MD Files
+                </button>
+            </div>
+
+            <button class="btn btn-success" onclick="exportTasks()">
+                💾 Export Master File
+            </button>
+
+            <button class="btn btn-secondary" onclick="importMasterFile()">
+                📥 Import Master File
+            </button>
+
+            <button class="btn btn-secondary" onclick="showHelpModal()">
+                ❓ Help
+            </button>
+
+            <button class="btn btn-success" onclick="exportFilteredView()">
+                📝 Export Filtered View
+            </button>
+
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search tasks..." onkeyup="filterTasks()">
+                <span class="search-icon">🔍</span>
+            </div>
+
+            <div class="filters">
+                <select id="statusFilter" class="filter-select" onchange="filterTasks()">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                    <option value="in-progress">In Progress</option>
+                </select>
+
+                <select id="categoryFilter" class="filter-select" onchange="filterTasks()">
+                    <option value="">All Categories</option>
+                    <option value="bug">Bug</option>
+                    <option value="feature">Feature</option>
+                    <option value="testing">Testing</option>
+                    <option value="documentation">Documentation</option>
+                </select>
+            </div>
+
+            <div class="view-toggle">
+                <button id="cardViewBtn" class="active" onclick="switchView('cards')">📄 Cards</button>
+                <button id="tableViewBtn" onclick="switchView('table')">📊 Table</button>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-number" id="totalTasks">0</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="completedTasks">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="pendingTasks">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="bugTasks">0</div>
+                <div class="stat-label">Bugs</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="completionRate">0%</div>
+                <div class="stat-label">Completion Rate</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div id="cardsView" class="cards-container"></div>
+            <div id="tableView" class="table-container" style="display: none;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('title')">Title</th>
+                            <th onclick="sortTable('status')">Status</th>
+                            <th onclick="sortTable('category')">Category</th>
+                            <th onclick="sortTable('phase')">Phase</th>
+                            <th onclick="sortTable('taskNumber')">Task</th>
+                            <th onclick="sortTable('source')">Source</th>
+                            <th onclick="sortTable('dateAdded')">Date Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Edit Modal -->
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Edit Task</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="taskForm">
+                <div class="form-group">
+                    <label for="taskTitle">Title:</label>
+                    <input type="text" id="taskTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskStatus">Status:</label>
+                    <select id="taskStatus">
+                        <option value="pending">Pending</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="taskCategory">Category:</label>
+                    <select id="taskCategory">
+                        <option value="feature">Feature</option>
+                        <option value="bug">Bug</option>
+                        <option value="testing">Testing</option>
+                        <option value="documentation">Documentation</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="taskNotes">Notes:</label>
+                    <textarea id="taskNotes" placeholder="Add your notes here..."></textarea>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 30px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Task Master Help</h3>
+                <span class="close" onclick="closeHelpModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h4>📋 Getting Started</h4>
+                <p>Task Master helps you organize and manage tasks from markdown files. You can load tasks from .md files, view them in different formats, and export your data.</p>
+
+                <h4>🔄 Loading Tasks</h4>
+                <ul>
+                    <li><strong>Load MD Files:</strong> Import tasks from markdown files with checkbox format</li>
+                    <li><strong>Import Master File:</strong> Load a previously exported JSON master file</li>
+                    <li><strong>Duplicate Detection:</strong> Tasks are automatically merged to prevent duplicates</li>
+                </ul>
+
+                <h4>✅ Supported Task Formats</h4>
+                <p>The following checkbox formats are supported in markdown files:</p>
+                <ul>
+                    <li><code>- [ ] Pending task</code></li>
+                    <li><code>- [x] Completed task</code> or <code>- [✓] Completed task</code></li>
+                    <li><code>- [_] In progress task</code> or <code>- [-] In progress task</code></li>
+                </ul>
+
+                <h4>📊 Phase and Task Structure</h4>
+                <p>For better organization, use this structure in your markdown files:</p>
+                <pre>## Phase 1: Foundation
+**Task 1.1: Project Setup**
+- [x] Initialize React project
+- [ ] Set up build configuration
+
+**Task 1.2: Core Features**
+- [ ] User authentication system
+- [ ] Dashboard implementation</pre>
+
+                <h4>🔍 Features</h4>
+                <ul>
+                    <li><strong>Search:</strong> Find tasks by title, notes, or source file</li>
+                    <li><strong>Filters:</strong> Filter by status (pending, completed, in-progress) or category</li>
+                    <li><strong>Views:</strong> Switch between card view and table view</li>
+                    <li><strong>Sorting:</strong> Click column headers in table view to sort</li>
+                    <li><strong>Export Filtered View:</strong> Export current filtered tasks to markdown format</li>
+                    <li><strong>Statistics:</strong> Real-time stats showing task completion rates</li>
+                </ul>
+
+                <h4>💾 Data Management</h4>
+                <ul>
+                    <li><strong>Auto-save:</strong> Tasks are automatically saved to local storage</li>
+                    <li><strong>Export Master File:</strong> Save all tasks as JSON for backup</li>
+                    <li><strong>Categories:</strong> Tasks are automatically categorized (Feature, Bug, Testing, Documentation)</li>
+                </ul>
+
+                <h4>⚡ Keyboard Shortcuts</h4>
+                <ul>
+                    <li><strong>Search:</strong> Click the search box or start typing to filter tasks</li>
+                    <li><strong>Modal:</strong> Press Escape to close modals</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Master File Input -->
+    <input type="file" id="masterFileInput" accept=".json" style="display: none;">
+
+    <script src="task_manager.js"></script>
+</body>
+</html>

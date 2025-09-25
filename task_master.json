@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2025-09-23T22:45:00.000Z",
+  "tasks": [
+    {
+      "id": "task_1727132700000_sample1",
+      "title": "Set up project structure",
+      "status": "completed",
+      "category": "feature",
+      "source": "sample",
+      "notes": "Initial project setup with basic folders and files.",
+      "dateAdded": "2025-09-23T22:45:00.000Z",
+      "lastUpdated": "2025-09-23T22:45:00.000Z",
+      "originalLine": null,
+      "checksum": "setupprojectstructure"
+    },
+    {
+      "id": "task_1727132700001_sample2",
+      "title": "Fix authentication bug",
+      "status": "in-progress",
+      "category": "bug",
+      "source": "sample",
+      "notes": "Users are unable to log in with valid credentials.",
+      "dateAdded": "2025-09-23T22:45:00.000Z",
+      "lastUpdated": "2025-09-23T22:45:00.000Z",
+      "originalLine": null,
+      "checksum": "fixauthenticationbug"
+    },
+    {
+      "id": "task_1727132700002_sample3",
+      "title": "Write unit tests for API",
+      "status": "pending",
+      "category": "testing",
+      "source": "sample",
+      "notes": "Need comprehensive test coverage for all API endpoints.",
+      "dateAdded": "2025-09-23T22:45:00.000Z",
+      "lastUpdated": "2025-09-23T22:45:00.000Z",
+      "originalLine": null,
+      "checksum": "writeunittestsforapi"
+    },
+    {
+      "id": "task_1727132700003_sample4",
+      "title": "Update documentation",
+      "status": "pending",
+      "category": "documentation",
+      "source": "sample",
+      "notes": "API documentation is outdated and needs revision.",
+      "dateAdded": "2025-09-23T22:45:00.000Z",
+      "lastUpdated": "2025-09-23T22:45:00.000Z",
+      "originalLine": null,
+      "checksum": "updatedocumentation"
+    }
+  ],
+  "metadata": {
+    "totalTasks": 4,
+    "completedTasks": 1,
+    "sources": [
+      "sample"
+    ]
+  }
+}
