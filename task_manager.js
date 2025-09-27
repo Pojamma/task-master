@@ -634,6 +634,25 @@ class TaskManager {
         }
     }
 
+    createNewTask() {
+        this.editingTaskId = null;
+        document.getElementById('taskForm').reset();
+        document.getElementById('taskTitle').value = '';
+        document.getElementById('taskStatus').value = 'pending';
+        document.getElementById('taskCategory').value = 'feature';
+        document.getElementById('taskSection').value = '';
+        document.getElementById('taskPhase').value = '';
+        document.getElementById('taskNumber').value = '';
+        document.getElementById('taskNotes').value = '';
+        document.getElementById('modalTitle').textContent = 'Create New Task';
+        document.getElementById('taskModal').style.display = 'block';
+
+        // Focus on the title input for better UX
+        setTimeout(() => {
+            document.getElementById('taskTitle').focus();
+        }, 100);
+    }
+
     // Statistics and analytics
     updateStats() {
         const total = this.tasks.length;
@@ -854,6 +873,10 @@ function clearAllTasks() {
     if (confirm('Are you sure you want to clear all tasks? This action cannot be undone.')) {
         taskManager.clearAllTasks();
     }
+}
+
+function createNewTask() {
+    taskManager.createNewTask();
 }
 
 // Initialize when DOM is loaded
