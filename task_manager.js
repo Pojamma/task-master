@@ -202,11 +202,19 @@ class TaskManager {
     }
 
     clearAllTasks() {
-        this.tasks = [];
-        this.saveToLocalStorage();
-        this.renderTasks();
-        this.updateStats();
-        this.showNotification('All tasks cleared successfully!', 'success');
+        if (this.activeProject) {
+            this.tasks = this.tasks.filter(t => t.project !== this.activeProject);
+            this.saveToLocalStorage();
+            this.renderTasks();
+            this.updateStats();
+            this.showNotification('Tasks in "' + this.activeProject + '" cleared!', 'success');
+        } else {
+            this.tasks = [];
+            this.saveToLocalStorage();
+            this.renderTasks();
+            this.updateStats();
+            this.showNotification('All tasks cleared!', 'success');
+        }
     }
 
     // Duplicate detection and merging
@@ -878,13 +886,18 @@ class TaskManager {
             this.saveTaskFromForm();
         });
 
-        // Modal close events
+        // Modal close events and dropdown dismiss
         window.addEventListener('click', (e) => {
             if (e.target === document.getElementById('taskModal')) {
                 this.closeModal();
             }
             if (e.target === document.getElementById('helpModal')) {
                 document.getElementById('helpModal').style.display = 'none';
+            }
+            // Close file dropdown when clicking outside
+            const dropdown = document.querySelector('.dropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                document.getElementById('fileMenu').classList.remove('show');
             }
         });
 
@@ -1060,13 +1073,25 @@ function exportFilteredView() {
 }
 
 function clearAllTasks() {
-    if (confirm('Are you sure you want to clear all tasks? This action cannot be undone.')) {
+    const project = taskManager.activeProject;
+    const msg = project
+        ? 'Clear all tasks in "' + project + '"? This cannot be undone.'
+        : 'Clear ALL tasks in every project? This cannot be undone.';
+    if (confirm(msg)) {
         taskManager.clearAllTasks();
     }
 }
 
 function createNewTask() {
     taskManager.createNewTask();
+}
+
+function toggleFileMenu() {
+    document.getElementById('fileMenu').classList.toggle('show');
+}
+
+function closeFileMenu() {
+    document.getElementById('fileMenu').classList.remove('show');
 }
 
 // Initialize when DOM is loaded
