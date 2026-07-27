@@ -6,6 +6,8 @@ class TaskManager {
         this.sortColumn = '';
         this.sortDirection = 'asc';
         this.editingTaskId = null;
+        this.projects = [];
+        this.activeProject = null;
         this.init();
     }
 
@@ -25,7 +27,8 @@ class TaskManager {
             metadata: {
                 totalTasks: this.tasks.length,
                 completedTasks: this.tasks.filter(t => t.status === 'completed').length,
-                sources: [...new Set(this.tasks.map(t => t.source))]
+                sources: [...new Set(this.tasks.map(t => t.source))],
+                projects: this.projects
             }
         };
     }
@@ -47,7 +50,8 @@ class TaskManager {
             phase: '',
             taskNumber: '',
             phaseData: null,
-            taskData: null
+            taskData: null,
+            project: ''
         };
     }
 
@@ -164,6 +168,7 @@ class TaskManager {
         if (taskData.phaseData) task.phaseData = taskData.phaseData;
         if (taskData.taskData) task.taskData = taskData.taskData;
         if (taskData.originalLine) task.originalLine = taskData.originalLine;
+        if (taskData.project) task.project = taskData.project;
 
         this.tasks.push(task);
         this.saveToLocalStorage();
@@ -189,6 +194,8 @@ class TaskManager {
         if (index !== -1) {
             this.tasks.splice(index, 1);
             this.saveToLocalStorage();
+            this.renderTasks();
+            this.updateStats();
             return true;
         }
         return false;
@@ -443,6 +450,9 @@ class TaskManager {
                 if (data.tasks) {
                     this.tasks = data.tasks;
                 }
+                if (data.metadata && data.metadata.projects) {
+                    this.projects = data.metadata.projects;
+                }
             } catch (error) {
                 console.error('Error loading from localStorage:', error);
             }
@@ -451,6 +461,7 @@ class TaskManager {
 
     // UI Rendering
     renderTasks() {
+        this.renderProjectTabs();
         if (this.currentView === 'cards') {
             this.renderCardsView();
         } else {
@@ -486,6 +497,7 @@ class TaskManager {
                     </div>
                     ${task.phase ? `<div>📊 ${task.phase}</div>` : ''}
                     ${task.taskNumber ? `<div>📋 ${task.taskNumber}</div>` : ''}
+                    ${task.project ? `<div>📂 ${this.escapeHtml(task.project)}</div>` : ''}
                     <div>📁 ${task.source}</div>
                     <div>📅 ${new Date(task.dateAdded).toLocaleDateString()}</div>
                 </div>
@@ -521,7 +533,7 @@ class TaskManager {
         if (filteredTasks.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" class="empty-state">
+                    <td colspan="9" class="empty-state">
                         <h3>No tasks found</h3>
                         <p>Load some markdown files or create tasks manually to get started.</p>
                     </td>
@@ -544,6 +556,7 @@ class TaskManager {
                 </td>
                 <td>${task.phase || '-'}</td>
                 <td>${task.taskNumber || '-'}</td>
+                <td>${task.project || '-'}</td>
                 <td>${task.source}</td>
                 <td>${new Date(task.dateAdded).toLocaleDateString()}</td>
                 <td>
@@ -561,9 +574,161 @@ class TaskManager {
         `).join('');
     }
 
+    // Project/Tab management
+    renderProjectTabs() {
+        const container = document.getElementById('projectTabs');
+        if (!container) return;
+        container.innerHTML = '';
+
+        const allCount = this.tasks.length;
+
+        // "All" tab
+        const allTab = document.createElement('button');
+        allTab.className = 'project-tab' + (this.activeProject === null ? ' active' : '');
+        allTab.innerHTML = 'All <span class="tab-count">' + allCount + '</span>';
+        allTab.addEventListener('click', () => this.setActiveProject(null));
+        container.appendChild(allTab);
+
+        // Collect all known projects
+        const projectsFromTasks = [...new Set(this.tasks.map(t => t.project).filter(p => p))];
+        const allProjects = [...new Set([...this.projects, ...projectsFromTasks])].sort();
+
+        allProjects.forEach(project => {
+            const count = this.tasks.filter(t => t.project === project).length;
+            const isActive = this.activeProject === project;
+
+            const tab = document.createElement('button');
+            tab.className = 'project-tab' + (isActive ? ' active' : '');
+
+            const label = document.createTextNode(project + ' ');
+            tab.appendChild(label);
+
+            const badge = document.createElement('span');
+            badge.className = 'tab-count';
+            badge.textContent = count;
+            tab.appendChild(badge);
+
+            const closeBtn = document.createElement('span');
+            closeBtn.className = 'tab-close';
+            closeBtn.innerHTML = '&times;';
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.deleteProjectTab(project);
+            });
+            tab.appendChild(closeBtn);
+
+            tab.addEventListener('click', () => this.setActiveProject(project));
+            tab.addEventListener('dblclick', () => this.renameProjectTab(project));
+            container.appendChild(tab);
+        });
+
+        // "+" button
+        const addBtn = document.createElement('button');
+        addBtn.className = 'add-project-tab';
+        addBtn.textContent = '+ New';
+        addBtn.title = 'Add new project/client';
+        addBtn.addEventListener('click', () => this.addProjectTab());
+        container.appendChild(addBtn);
+    }
+
+    setActiveProject(project) {
+        this.activeProject = project;
+        this.renderTasks();
+        this.updateStats();
+    }
+
+    addProjectTab() {
+        const name = prompt('Enter project/client name:');
+        if (name && name.trim()) {
+            const trimmed = name.trim();
+            if (!this.projects.includes(trimmed)) {
+                this.projects.push(trimmed);
+                this.saveToLocalStorage();
+                this.renderProjectTabs();
+                this.showNotification('Project "' + trimmed + '" created!', 'success');
+            } else {
+                this.showNotification('Project already exists.', 'error');
+            }
+        }
+    }
+
+    deleteProjectTab(project) {
+        if (!confirm('Delete project "' + project + '"? Tasks will be moved to (No Project).')) return;
+
+        this.projects = this.projects.filter(p => p !== project);
+
+        this.tasks.forEach(task => {
+            if (task.project === project) {
+                task.project = '';
+            }
+        });
+
+        if (this.activeProject === project) {
+            this.activeProject = null;
+        }
+
+        this.saveToLocalStorage();
+        this.renderTasks();
+        this.updateStats();
+        this.showNotification('Project "' + project + '" deleted.', 'success');
+    }
+
+    renameProjectTab(oldName) {
+        const newName = prompt('Rename project:', oldName);
+        if (newName && newName.trim() && newName.trim() !== oldName) {
+            const trimmed = newName.trim();
+
+            const idx = this.projects.indexOf(oldName);
+            if (idx !== -1) {
+                this.projects[idx] = trimmed;
+            } else {
+                this.projects.push(trimmed);
+            }
+
+            this.tasks.forEach(task => {
+                if (task.project === oldName) {
+                    task.project = trimmed;
+                }
+            });
+
+            if (this.activeProject === oldName) {
+                this.activeProject = trimmed;
+            }
+
+            this.saveToLocalStorage();
+            this.renderTasks();
+            this.updateStats();
+            this.showNotification('Project renamed to "' + trimmed + '".', 'success');
+        }
+    }
+
+    populateProjectDropdown(selectedProject) {
+        const select = document.getElementById('taskProject');
+        const projectsFromTasks = [...new Set(this.tasks.map(t => t.project).filter(p => p))];
+        const allProjects = [...new Set([...this.projects, ...projectsFromTasks])].sort();
+
+        select.innerHTML = '<option value="">(No Project)</option>';
+        allProjects.forEach(project => {
+            const option = document.createElement('option');
+            option.value = project;
+            option.textContent = project;
+            if (project === selectedProject) option.selected = true;
+            select.appendChild(option);
+        });
+        const addOption = document.createElement('option');
+        addOption.value = '__new__';
+        addOption.textContent = '-- Add New Project --';
+        select.appendChild(addOption);
+    }
+
     // Filtering and sorting
     getFilteredTasks() {
         let filtered = [...this.tasks];
+
+        // Apply project filter
+        if (this.activeProject) {
+            filtered = filtered.filter(task => task.project === this.activeProject);
+        }
 
         // Apply search filter
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
@@ -630,6 +795,7 @@ class TaskManager {
             document.getElementById('taskNumber').value = task.taskNumber || '';
             document.getElementById('taskNotes').value = task.notes || '';
             document.getElementById('modalTitle').textContent = 'Edit Task';
+            this.populateProjectDropdown(task.project || '');
             document.getElementById('taskModal').style.display = 'block';
         }
     }
@@ -645,6 +811,7 @@ class TaskManager {
         document.getElementById('taskNumber').value = '';
         document.getElementById('taskNotes').value = '';
         document.getElementById('modalTitle').textContent = 'Create New Task';
+        this.populateProjectDropdown(this.activeProject || '');
         document.getElementById('taskModal').style.display = 'block';
 
         // Focus on the title input for better UX
@@ -655,10 +822,13 @@ class TaskManager {
 
     // Statistics and analytics
     updateStats() {
-        const total = this.tasks.length;
-        const completed = this.tasks.filter(t => t.status === 'completed').length;
-        const pending = this.tasks.filter(t => t.status === 'pending').length;
-        const bugs = this.tasks.filter(t => t.category === 'bug').length;
+        const tasks = this.activeProject
+            ? this.tasks.filter(t => t.project === this.activeProject)
+            : this.tasks;
+        const total = tasks.length;
+        const completed = tasks.filter(t => t.status === 'completed').length;
+        const pending = tasks.filter(t => t.status === 'pending').length;
+        const bugs = tasks.filter(t => t.category === 'bug').length;
         const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
         document.getElementById('totalTasks').textContent = total;
@@ -682,6 +852,23 @@ class TaskManager {
             if (e.target.files.length > 0) {
                 this.importMasterFile(e.target.files[0]);
                 e.target.value = ''; // Reset input
+            }
+        });
+
+        // Project dropdown handler
+        document.getElementById('taskProject').addEventListener('change', (e) => {
+            if (e.target.value === '__new__') {
+                const name = prompt('Enter new project/client name:');
+                if (name && name.trim()) {
+                    const trimmed = name.trim();
+                    if (!this.projects.includes(trimmed)) {
+                        this.projects.push(trimmed);
+                        this.saveToLocalStorage();
+                    }
+                    this.populateProjectDropdown(trimmed);
+                } else {
+                    e.target.value = '';
+                }
             }
         });
 
@@ -719,6 +906,7 @@ class TaskManager {
         const phase = document.getElementById('taskPhase').value;
         const taskNumber = document.getElementById('taskNumber').value;
         const notes = document.getElementById('taskNotes').value;
+        const project = document.getElementById('taskProject').value === '__new__' ? '' : document.getElementById('taskProject').value;
 
         if (this.editingTaskId) {
             // Update existing task
@@ -729,7 +917,8 @@ class TaskManager {
                 section: section,
                 phase: phase,
                 taskNumber: taskNumber,
-                notes: notes
+                notes: notes,
+                project: project
             });
         } else {
             // Create new task
@@ -741,7 +930,8 @@ class TaskManager {
                 phase: phase,
                 taskNumber: taskNumber,
                 source: 'manual',
-                notes: notes
+                notes: notes,
+                project: project
             });
         }
 

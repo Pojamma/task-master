@@ -506,6 +506,104 @@
                 margin: 2% auto;
                 max-height: 90vh;
             }
+
+            .project-tabs {
+                padding: 10px 15px;
+                gap: 6px;
+            }
+        }
+
+        /* Project Tabs */
+        .project-tabs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: #fff;
+            border-bottom: 1px solid #e9ecef;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .project-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .project-tabs::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 2px;
+        }
+
+        .project-tab {
+            padding: 8px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .project-tab:hover {
+            border-color: #007bff;
+            color: #007bff;
+        }
+
+        .project-tab.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .project-tab .tab-count {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+        }
+
+        .project-tab.active .tab-count {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .project-tab .tab-close {
+            font-size: 14px;
+            line-height: 1;
+            opacity: 0;
+            transition: opacity 0.2s;
+            margin-left: 2px;
+            cursor: pointer;
+        }
+
+        .project-tab:hover .tab-close {
+            opacity: 0.7;
+        }
+
+        .project-tab .tab-close:hover {
+            opacity: 1;
+        }
+
+        .add-project-tab {
+            padding: 8px 14px;
+            border: 2px dashed #ccc;
+            border-radius: 20px;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .add-project-tab:hover {
+            border-color: #28a745;
+            color: #28a745;
         }
 
         /* Loading Animation */
@@ -672,6 +770,8 @@
             </div>
         </div>
 
+        <div id="projectTabs" class="project-tabs"></div>
+
         <div class="stats-bar">
             <div class="stat">
                 <div class="stat-number" id="totalTasks">0</div>
@@ -706,6 +806,7 @@
                             <th onclick="sortTable('category')">Category</th>
                             <th onclick="sortTable('phase')">Phase</th>
                             <th onclick="sortTable('taskNumber')">Task</th>
+                            <th onclick="sortTable('project')">Project</th>
                             <th onclick="sortTable('source')">Source</th>
                             <th onclick="sortTable('dateAdded')">Date Added</th>
                             <th>Actions</th>
@@ -744,6 +845,12 @@
                         <option value="bug">Bug</option>
                         <option value="testing">Testing</option>
                         <option value="documentation">Documentation</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="taskProject">Project:</label>
+                    <select id="taskProject">
+                        <option value="">(No Project)</option>
                     </select>
                 </div>
                 <div class="form-group">
