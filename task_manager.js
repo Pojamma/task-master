@@ -1087,7 +1087,16 @@ function createNewTask() {
 }
 
 function toggleFileMenu() {
-    document.getElementById('fileMenu').classList.toggle('show');
+    const menu = document.getElementById('fileMenu');
+    if (menu.classList.contains('show')) {
+        menu.classList.remove('show');
+    } else {
+        const btn = document.querySelector('.dropdown > .btn');
+        const rect = btn.getBoundingClientRect();
+        menu.style.top = rect.bottom + 4 + 'px';
+        menu.style.left = rect.left + 'px';
+        menu.classList.add('show');
+    }
 }
 
 function closeFileMenu() {
