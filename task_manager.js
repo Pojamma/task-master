@@ -2,7 +2,7 @@
 class TaskManager {
     constructor() {
         this.tasks = [];
-        this.currentView = 'cards';
+        this.currentView = 'table';
         this.sortColumn = '';
         this.sortDirection = 'asc';
         this.editingTaskId = null;
