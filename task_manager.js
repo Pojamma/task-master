@@ -525,6 +525,7 @@ class TaskManager {
                     <button class="btn btn-primary btn-small" onclick="taskManager.editTask('${task.id}')">
                         ✏️ Edit
                     </button>
+                    ${task.notes ? `<button class="btn btn-secondary btn-small" onclick="taskManager.copyNotes('${task.id}')">📋 Copy Notes</button>` : ''}
                     <button class="btn btn-${task.status === 'completed' ? 'secondary' : 'success'} btn-small"
                             onclick="taskManager.toggleTaskStatus('${task.id}')">
                         ${task.status === 'completed' ? '↩️ Reopen' : '✅ Complete'}
@@ -575,6 +576,7 @@ class TaskManager {
                 <td>
                     <div style="display: flex; gap: 5px;">
                         <button class="btn btn-primary btn-small" onclick="taskManager.editTask('${task.id}')">✏️</button>
+                        ${task.notes ? `<button class="btn btn-secondary btn-small" onclick="taskManager.copyNotes('${task.id}')" title="Copy Notes">📋</button>` : ''}
                         <button class="btn btn-${task.status === 'completed' ? 'secondary' : 'success'} btn-small"
                                 onclick="taskManager.toggleTaskStatus('${task.id}')">
                             ${task.status === 'completed' ? '↩️' : '✅'}
@@ -796,6 +798,17 @@ class TaskManager {
     }
 
     // Task operations
+    copyNotes(id) {
+        const task = this.tasks.find(t => t.id === id);
+        if (task && task.notes) {
+            navigator.clipboard.writeText(task.notes).then(() => {
+                this.showNotification('Notes copied to clipboard!', 'success');
+            }).catch(() => {
+                this.showNotification('Failed to copy notes.', 'error');
+            });
+        }
+    }
+
     toggleTaskStatus(id) {
         const task = this.tasks.find(t => t.id === id);
         if (task) {
@@ -1099,6 +1112,19 @@ function clearAllTasks() {
         : 'Clear ALL tasks in every project? This cannot be undone.';
     if (confirm(msg)) {
         taskManager.clearAllTasks();
+    }
+}
+
+function copyModalNotes() {
+    const notes = document.getElementById('taskNotes').value;
+    if (notes) {
+        navigator.clipboard.writeText(notes).then(() => {
+            taskManager.showNotification('Notes copied to clipboard!', 'success');
+        }).catch(() => {
+            taskManager.showNotification('Failed to copy notes.', 'error');
+        });
+    } else {
+        taskManager.showNotification('No notes to copy.', 'info');
     }
 }
 
