@@ -302,6 +302,34 @@
         .badge-testing { background: #ffc107; }
         .badge-documentation { background: #6f42c1; }
 
+        .priority-badge {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .priority-high {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .priority-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .priority-low {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .priority-on-hold {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
         .task-notes {
             background: #f8f9fa;
             padding: 12px;
@@ -855,6 +883,14 @@
                     <option value="testing">Testing</option>
                     <option value="documentation">Documentation</option>
                 </select>
+
+                <select id="priorityFilter" class="filter-select" onchange="filterTasks()">
+                    <option value="">All Priorities</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                    <option value="on-hold">On Hold</option>
+                </select>
             </div>
 
             <div class="view-toggle">
@@ -897,6 +933,7 @@
                             <th onclick="sortTable('title')">Title</th>
                             <th onclick="sortTable('status')">Status</th>
                             <th onclick="sortTable('category')">Category</th>
+                            <th onclick="sortTable('priority')">Priority</th>
                             <th onclick="sortTable('phase')">Phase</th>
                             <th onclick="sortTable('taskNumber')">Task</th>
                             <th onclick="sortTable('project')">Project</th>
@@ -938,6 +975,15 @@
                         <option value="bug">Bug</option>
                         <option value="testing">Testing</option>
                         <option value="documentation">Documentation</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="taskPriority">Priority:</label>
+                    <select id="taskPriority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                        <option value="on-hold">On Hold</option>
                     </select>
                 </div>
                 <div class="form-group">

@@ -34,12 +34,13 @@ class TaskManager {
     }
 
     // Task structure definition
-    createTask(title, status = 'pending', category = 'feature', source = 'manual', notes = '') {
+    createTask(title, status = 'pending', category = 'feature', source = 'manual', notes = '', priority = 'medium') {
         return {
             id: this.generateId(),
             title: title.trim(),
             status: status,
             category: category,
+            priority: priority,
             source: source,
             notes: notes,
             dateAdded: new Date().toISOString(),
@@ -158,7 +159,8 @@ class TaskManager {
             taskData.status,
             taskData.category,
             taskData.source,
-            taskData.notes
+            taskData.notes,
+            taskData.priority || 'medium'
         );
 
         // Copy additional fields from parsed data if they exist
@@ -503,6 +505,7 @@ class TaskManager {
                         <span class="category-badge badge-${task.category}"></span>
                         ${this.capitalize(task.category)}
                     </div>
+                    <div><span class="priority-badge priority-${task.priority || 'medium'}">${this.capitalize(task.priority || 'medium')}</span></div>
                     ${task.phase ? `<div>📊 ${task.phase}</div>` : ''}
                     ${task.taskNumber ? `<div>📋 ${task.taskNumber}</div>` : ''}
                     ${task.project ? `<div>📂 ${this.escapeHtml(task.project)}</div>` : ''}
@@ -541,7 +544,7 @@ class TaskManager {
         if (filteredTasks.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="9" class="empty-state">
+                    <td colspan="10" class="empty-state">
                         <h3>No tasks found</h3>
                         <p>Load some markdown files or create tasks manually to get started.</p>
                     </td>
@@ -562,6 +565,7 @@ class TaskManager {
                         ${this.capitalize(task.category)}
                     </div>
                 </td>
+                <td><span class="priority-badge priority-${task.priority || 'medium'}">${this.capitalize(task.priority || 'medium')}</span></td>
                 <td>${task.phase || '-'}</td>
                 <td>${task.taskNumber || '-'}</td>
                 <td>${task.project || '-'}</td>
@@ -760,8 +764,15 @@ class TaskManager {
             filtered = filtered.filter(task => task.category === categoryFilter);
         }
 
+        // Apply priority filter
+        const priorityFilter = document.getElementById('priorityFilter').value;
+        if (priorityFilter) {
+            filtered = filtered.filter(task => (task.priority || 'medium') === priorityFilter);
+        }
+
         // Apply sorting
         if (this.sortColumn) {
+            const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2, 'on-hold': 3 };
             filtered.sort((a, b) => {
                 let aVal = a[this.sortColumn];
                 let bVal = b[this.sortColumn];
@@ -769,6 +780,9 @@ class TaskManager {
                 if (this.sortColumn === 'dateAdded' || this.sortColumn === 'lastUpdated') {
                     aVal = new Date(aVal);
                     bVal = new Date(bVal);
+                } else if (this.sortColumn === 'priority') {
+                    aVal = priorityOrder[aVal || 'medium'];
+                    bVal = priorityOrder[bVal || 'medium'];
                 }
 
                 if (aVal < bVal) return this.sortDirection === 'asc' ? -1 : 1;
@@ -798,6 +812,7 @@ class TaskManager {
             document.getElementById('taskTitle').value = task.title;
             document.getElementById('taskStatus').value = task.status;
             document.getElementById('taskCategory').value = task.category;
+            document.getElementById('taskPriority').value = task.priority || 'medium';
             document.getElementById('taskSection').value = task.section || '';
             document.getElementById('taskPhase').value = task.phase || '';
             document.getElementById('taskNumber').value = task.taskNumber || '';
@@ -814,6 +829,7 @@ class TaskManager {
         document.getElementById('taskTitle').value = '';
         document.getElementById('taskStatus').value = 'pending';
         document.getElementById('taskCategory').value = 'feature';
+        document.getElementById('taskPriority').value = 'medium';
         document.getElementById('taskSection').value = '';
         document.getElementById('taskPhase').value = '';
         document.getElementById('taskNumber').value = '';
@@ -915,6 +931,7 @@ class TaskManager {
         const title = document.getElementById('taskTitle').value;
         const status = document.getElementById('taskStatus').value;
         const category = document.getElementById('taskCategory').value;
+        const priority = document.getElementById('taskPriority').value;
         const section = document.getElementById('taskSection').value;
         const phase = document.getElementById('taskPhase').value;
         const taskNumber = document.getElementById('taskNumber').value;
@@ -927,6 +944,7 @@ class TaskManager {
                 title: title,
                 status: status,
                 category: category,
+                priority: priority,
                 section: section,
                 phase: phase,
                 taskNumber: taskNumber,
@@ -939,6 +957,7 @@ class TaskManager {
                 title: title,
                 status: status,
                 category: category,
+                priority: priority,
                 section: section,
                 phase: phase,
                 taskNumber: taskNumber,
