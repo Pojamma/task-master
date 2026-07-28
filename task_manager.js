@@ -289,15 +289,16 @@ class TaskManager {
         const blob = new Blob([JSON.stringify(masterData, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
 
+        const filename = `task_master_${new Date().toISOString().split('T')[0]}.json`;
         const a = document.createElement('a');
         a.href = url;
-        a.download = `task_master_${new Date().toISOString().split('T')[0]}.json`;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        this.showNotification('Master file exported successfully!', 'success');
+        this.showNotification(`Exported: ${filename} (saved to Downloads)`, 'success');
     }
 
     exportFilteredViewAsMarkdown() {
