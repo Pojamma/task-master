@@ -289,7 +289,7 @@ class TaskManager {
         const blob = new Blob([JSON.stringify(masterData, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
 
-        const filename = `task_master_${new Date().toISOString().split('T')[0]}.json`;
+        const filename = this.buildExportFilename('task_master', 'json');
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
@@ -354,15 +354,16 @@ class TaskManager {
         const blob = new Blob([markdownContent], { type: 'text/markdown' });
         const url = URL.createObjectURL(blob);
 
+        const filename = this.buildExportFilename('task_master_filtered', 'md');
         const a = document.createElement('a');
         a.href = url;
-        a.download = `task_master_filtered_${new Date().toISOString().split('T')[0]}.md`;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        this.showNotification(`Exported ${filteredTasks.length} tasks to markdown!`, 'success');
+        this.showNotification(`Exported: ${filename} (saved to Downloads)`, 'success');
     }
 
     formatTaskAsMarkdown(task) {
@@ -1038,6 +1039,16 @@ class TaskManager {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    buildExportFilename(prefix, ext) {
+        const now = new Date();
+        const date = now.toISOString().split('T')[0];
+        const time = now.toTimeString().split(' ')[0].replace(/:/g, '');
+        const tab = this.activeProject
+            ? '_' + this.activeProject.replace(/[^a-zA-Z0-9_-]/g, '_')
+            : '_all';
+        return `${prefix}${tab}_${date}_${time}.${ext}`;
     }
 
     capitalize(str) {
